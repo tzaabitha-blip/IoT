@@ -197,9 +197,7 @@ if (!$pump_data) {
     <!-- STATUS POMPA -->
     <div class="pump-status-card">
         <div class="pump-header">
-            <h3>
-                🚰 STATUS POMPA AIR
-            </h3>
+            <h3>🚰 STATUS POMPA AIR</h3>
             <div class="pump-status">
                 <span class="pump-badge <?= ($pump_data['pump_status'] ?? 0) ? 'on' : 'off' ?>" id="pumpBadge">
                     <?= ($pump_data['pump_status'] ?? 0) ? '🔴 MENYALA' : '🟢 MATI' ?>
@@ -211,7 +209,7 @@ if (!$pump_data) {
             </div>
         </div>
         
-        <!-- QUICK CONTROL (tanpa pindah halaman) -->
+        <!-- QUICK CONTROL -->
         <div class="quick-control">
             <button class="quick-btn" onclick="setMode('auto')">🤖 Mode Otomatis</button>
             <button class="quick-btn" onclick="setMode('manual')">👆 Mode Manual</button>
