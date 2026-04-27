@@ -124,6 +124,19 @@ $notifications = array_slice($notifications, 0, 30);
     <title>Notifikasi - Smart Sawi</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        .main-content {
+    margin-left: 260px;
+    padding: 40px;
+    transition: margin-left 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+        padding: 20px;
+        padding-top: 80px;
+    }
+}
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; }
         .main-content { margin-left: 260px; padding: 40px; }
