@@ -31,13 +31,13 @@ DATA SENSOR SAAT INI:
 - Kelembaban Tanah: {$tanah}% (ideal: 60-80%)
 - Kelembaban Udara: {$udara}% (ideal: 50-70%)
 - Suhu Udara: {$suhu}°C (ideal: 20-28°C)
-- Intensitas Cahaya: {$cahaya} Lux (ideal: >5000 Lux)
+- Kecerahan Cahaya: {$cahaya}% (ideal: >50%)
 
 DATA RATA-RATA 7 HARI TERAKHIR:
 - Rata-rata Kelembaban Tanah: " . round($historis['avg_tanah'] ?? 0) . "%
 - Rata-rata Kelembaban Udara: " . round($historis['avg_udara'] ?? 0) . "%
 - Rata-rata Suhu: " . round($historis['avg_suhu'] ?? 0) . "°C
-- Rata-rata Cahaya: " . round($historis['avg_cahaya'] ?? 0) . " Lux
+- Rata-rata Cahaya: " . round($historis['avg_cahaya'] ?? 0) . "%
 
 Berdasarkan data di atas, berikan:
 1. Analisis singkat kondisi tanaman

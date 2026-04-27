@@ -101,10 +101,10 @@ while($row = $result_sensor->fetch_assoc()) {
     }
     
     // Cek intensitas cahaya
-    if ($cahaya < 3000) {
+    if ($cahaya < 30) {
         $notifications[] = [
             'type' => 'warning',
-            'message' => "☀️ Intensitas cahaya rendah (" . round($cahaya) . " Lux) - Fotosintesis terganggu",
+            'message' => "☀️ Intensitas cahaya rendah (" . round($cahaya) . "%%) - Kecerahan rendah, fotosintesis terganggu",
             'time' => $waktu,
             'action' => 'Tambah Pencahayaan'
         ];

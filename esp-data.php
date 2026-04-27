@@ -227,7 +227,7 @@ $statusSuhu = getStatus($data['suhuUdara'] ?? 0, 'suhu');
         </div>
         <div class="stat-card">
             <h3>Intensitas Cahaya</h3>
-            <p class="value"><?= $data['kecerahan'] ?? '0' ?> <span style="font-size: 16px;">Lux</span></p>
+            <p class="value"><?= $data['kecerahan'] ?? '0' ?> <span style="font-size: 16px;">%</span></p>
             <span class="status-badge status-normal">Cahaya Terekam</span>
         </div>
     </div>
@@ -280,7 +280,7 @@ $statusSuhu = getStatus($data['suhuUdara'] ?? 0, 'suhu');
                 if ($suhu_val > 30) echo "<li>🌞 <strong>Berikan naungan tambahan</strong> - Suhu terlalu panas untuk sawi</li>";
                 elseif ($suhu_val < 18) echo "<li>❄️ <strong>Lindungi tanaman dari suhu dingin</strong> - Sawi sensitif terhadap suhu rendah</li>";
                 
-                if ($cahaya_val < 5000) echo "<li>💡 <strong>Tambah pencahayaan</strong> - Intensitas cahaya terlalu rendah</li>";
+                if ($cahaya_val < 30) echo "<li>💡 <strong>Tambah pencahayaan</strong> - Intensitas cahaya terlalu rendah</li>";
                 
                 echo "<li>📅 <strong>Jadwal pemupukan</strong> - Berikan pupuk organik setiap 7-10 hari sekali</li>";
                 echo "<li>🐛 <strong>Inspeksi hama</strong> - Periksa secara rutin tanda-tanda ulat atau kutu daun</li>";
