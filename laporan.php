@@ -295,20 +295,23 @@ $periode_text = match($periode) {
         
         /* ========== STYLE CETAK PDF ========== */
         @media print {
-            /* Sembunyikan sidebar */
+            /* SEMBUNYIKAN SIDEBAR */
             .sidebar-wrapper {
                 display: none !important;
             }
             
-            /* Sembunyikan tombol dan filter */
+            /* SEMBUNYIKAN TOMBOL CETAK, FILTER, DAN ELEMEN YANG TIDAK PERLU */
             .btn-print,
             .filter-box,
             .no-print,
-            .header button {
+            .header button,
+            .refresh-ai,
+            .quick-control,
+            .btn-control {
                 display: none !important;
             }
             
-            /* Atur ulang main content */
+            /* Atur ulang main content - hilangkan margin kiri karena sidebar hilang */
             .main-content {
                 margin: 0 !important;
                 padding: 20px !important;
@@ -440,7 +443,7 @@ $periode_text = match($periode) {
 <div class="main-wrapper">
     <!-- SIDEBAR - akan disembunyikan saat print -->
     <div class="sidebar-wrapper">
-        <!-- sidebar sudah di-include di baris atas, tidak perlu include ulang -->
+        <?php include 'includes/sidebar.php'; ?>
     </div>
     
     <!-- KONTEN UTAMA -->
@@ -544,10 +547,10 @@ $periode_text = match($periode) {
                                     <?php elseif($row['kelTanah'] < 60): ?> 🟡
                                     <?php else: ?> 🟢
                                     <?php endif; ?>
-                                </td>
+                                 </td>
                                 <td><?= $row['kelUdara'] ?></td>
-                                <td><?= $row['suhuUdara'] ?></td>
-                                <td><?= number_format($row['kecerahan'], 0, ',', '.') ?></td>
+                                <td><?= $row['suhuUdara'] ?>°C</td>
+                                <td><?= number_format($row['kecerahan'], 0, ',', '.') ?>%</td>
                                 <td style="font-size: 11px;"><?= $row['latitude'] ?>, <?= $row['longitude'] ?></td>
                             </tr>
                             <?php endwhile; ?>
