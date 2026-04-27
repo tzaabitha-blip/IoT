@@ -45,7 +45,7 @@ if (($stats['avg_tanah'] ?? 0) < 60) $rekomendasi[] = "🌱 Tingkatkan frekuensi
 if (($stats['avg_tanah'] ?? 0) > 85) $rekomendasi[] = "⚠️ Kurangi frekuensi penyiraman dan periksa drainase";
 if (($stats['avg_suhu'] ?? 0) > 30) $rekomendasi[] = "☀️ Berikan naungan tambahan (suhu terlalu panas)";
 if (($stats['avg_suhu'] ?? 0) < 20) $rekomendasi[] = "❄️ Lindungi tanaman dari suhu dingin";
-if (($stats['avg_cahaya'] ?? 0) < 5000) $rekomendasi[] = "💡 Tambah pencahayaan (cahaya kurang optimal)";
+if (($stats['avg_cahaya'] ?? 0) < 30) $rekomendasi[] = "💡 Tambah pencahayaan (cahaya kurang optimal)";
 
 // Format periode untuk ditampilkan
 $periode_text = match($periode) {
@@ -440,7 +440,7 @@ $periode_text = match($periode) {
 <div class="main-wrapper">
     <!-- SIDEBAR - akan disembunyikan saat print -->
     <div class="sidebar-wrapper">
-        <?php include 'includes/sidebar.php'; ?>
+        <!-- sidebar sudah di-include di baris atas, tidak perlu include ulang -->
     </div>
     
     <!-- KONTEN UTAMA -->
@@ -527,7 +527,7 @@ $periode_text = match($periode) {
                             <th>Tanah (%)</th>
                             <th>Udara (%)</th>
                             <th>Suhu (°C)</th>
-                            <th>Cahaya (Lux)</th>
+                            <th>Cahaya (%)</th>
                             <th>Koordinat</th>
                         </tr>
                     </thead>
