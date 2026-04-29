@@ -7,6 +7,26 @@ $periode = $_GET['periode'] ?? 'minggu';
 $tgl_awal = $_GET['tgl_awal'] ?? date('Y-m-d', strtotime('-7 days'));
 $tgl_akhir = $_GET['tgl_akhir'] ?? date('Y-m-d');
 
+// Export Excel
+if (isset($_GET['export_excel'])) {
+    header("Content-Type: application/vnd.ms-excel");
+    header("Content-Disposition: attachment; filename=laporan_smart_sawi_" . date('Y-m-d') . ".xls");
+    
+    echo "Waktu\tTanah (%)\tUdara (%)\tSuhu (°C)\tCahaya (%)\tKoordinat\n";
+    
+    $sql_export = "SELECT * FROM SensorData ORDER BY reading_time DESC";
+    $result_export = $conn->query($sql_export);
+    while($row = $result_export->fetch_assoc()) {
+        echo date('d/m/Y H:i:s', strtotime($row['reading_time'])) . "\t";
+        echo $row['kelTanah'] . "\t";
+        echo $row['kelUdara'] . "\t";
+        echo $row['suhuUdara'] . "\t";
+        echo $row['kecerahan'] . "\t";
+        echo $row['latitude'] . ", " . $row['longitude'] . "\n";
+    }
+    exit;
+}
+
 switch($periode) {
     case 'hari':
         $sql_filter = "WHERE reading_time >= DATE_SUB(NOW(), INTERVAL 1 DAY)";
@@ -39,7 +59,7 @@ $sql_stats = "SELECT
 FROM SensorData $sql_filter";
 $stats = $conn->query($sql_stats)->fetch_assoc();
 
-// Rekomendasi berdasarkan laporan
+// Rekomendasi
 $rekomendasi = [];
 if (($stats['avg_tanah'] ?? 0) < 60) $rekomendasi[] = "🌱 Tingkatkan frekuensi penyiraman (tanah kering)";
 if (($stats['avg_tanah'] ?? 0) > 85) $rekomendasi[] = "⚠️ Kurangi frekuensi penyiraman dan periksa drainase";
@@ -47,7 +67,6 @@ if (($stats['avg_suhu'] ?? 0) > 30) $rekomendasi[] = "☀️ Berikan naungan tam
 if (($stats['avg_suhu'] ?? 0) < 20) $rekomendasi[] = "❄️ Lindungi tanaman dari suhu dingin";
 if (($stats['avg_cahaya'] ?? 0) < 30) $rekomendasi[] = "💡 Tambah pencahayaan (cahaya kurang optimal)";
 
-// Format periode untuk ditampilkan
 $periode_text = match($periode) {
     'hari' => 'Hari Ini',
     'minggu' => '7 Hari Terakhir',
@@ -77,22 +96,11 @@ $periode_text = match($periode) {
             color: #1e293b;
         }
         
-        /* ========== LAYOUT UTAMA ========== */
-        .main-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-        
-        /* Sidebar */
-        .sidebar-wrapper {
-            width: 260px;
-            flex-shrink: 0;
-        }
-        
-        /* Konten Utama */
+        /* === SIDEBAR INTERAKTIF === */
         .main-content {
-            flex: 1;
+            margin-left: 260px;
             padding: 40px;
+            transition: margin-left 0.3s ease;
         }
         
         /* Header */
@@ -112,7 +120,48 @@ $periode_text = match($periode) {
             margin: 0;
         }
         
-        /* Filter Box */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .btn-print {
+            background: #6366f1;
+        }
+        
+        .btn-print:hover {
+            background: #4f46e5;
+        }
+        
+        .btn-excel {
+            background: #22c55e;
+        }
+        
+        .btn-excel:hover {
+            background: #16a34a;
+        }
+        
         .filter-box {
             background: white;
             padding: 20px;
@@ -149,22 +198,6 @@ $periode_text = match($periode) {
             font-family: 'Inter', sans-serif;
         }
         
-        .btn {
-            background: #10b981;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .btn-print {
-            background: #6366f1;
-        }
-        
-        /* Statistik Summary */
         .stats-summary {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -178,6 +211,12 @@ $periode_text = match($periode) {
             border-radius: 16px;
             border: 1px solid #e2e8f0;
             text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
         }
         
         .summary-card h3 {
@@ -199,7 +238,6 @@ $periode_text = match($periode) {
             margin-top: 5px;
         }
         
-        /* Tabel */
         .report-table {
             background: white;
             border-radius: 16px;
@@ -250,7 +288,12 @@ $periode_text = match($periode) {
             background: #f8fafc;
         }
         
-        /* Rekomendasi */
+        .badge-tanah {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
         .recommendation-section {
             background: #fef3c7;
             border-left: 4px solid #f59e0b;
@@ -273,7 +316,6 @@ $periode_text = match($periode) {
             margin: 8px 0;
         }
         
-        /* Info footer */
         .info-footer {
             margin-top: 20px;
             padding: 15px;
@@ -284,7 +326,6 @@ $periode_text = match($periode) {
             text-align: center;
         }
         
-        /* ========== HEADER & FOOTER KHUSUS PRINT ========== */
         .print-header {
             display: none;
         }
@@ -293,76 +334,112 @@ $periode_text = match($periode) {
             display: none;
         }
         
-        /* ========== STYLE CETAK PDF ========== */
-        @media print {
-            /* SEMBUNYIKAN SIDEBAR */
-            .sidebar-wrapper {
-                display: none !important;
-            }
-            
-            /* SEMBUNYIKAN TOMBOL CETAK, FILTER, DAN ELEMEN YANG TIDAK PERLU */
-            .btn-print,
-            .filter-box,
-            .no-print,
-            .header button,
-            .refresh-ai,
-            .quick-control,
-            .btn-control {
-                display: none !important;
-            }
-            
-            /* Atur ulang main content - hilangkan margin kiri karena sidebar hilang */
+        /* === RESPONSIVE MOBILE === */
+        @media (max-width: 768px) {
             .main-content {
+                margin-left: 0 !important;
+                padding: 20px;
+                padding-top: 80px;
+            }
+            
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .filter-form {
+                flex-direction: column;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .btn-group {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+        
+        /* === PERBAIKAN CETAK PDF === */
+        @media print {
+            /* Reset semua margin */
+            body, html {
                 margin: 0 !important;
-                padding: 20px !important;
+                padding: 0 !important;
                 width: 100% !important;
             }
             
-            .main-wrapper {
-                display: block !important;
+            /* Hilangkan sidebar */
+            .my-sidebar,
+            .hamburger,
+            .sidebar-overlay {
+                display: none !important;
             }
             
-            /* Background putih */
-            body {
-                background: white !important;
+            /* Hilangkan tombol dan filter */
+            .btn-print,
+            .btn-excel,
+            .filter-box,
+            .no-print,
+            .header button,
+            .btn-group {
+                display: none !important;
             }
             
-            /* Tampilkan header print */
+            /* Konten utama full width */
+            .main-content {
+                margin-left: 0 !important;
+                padding: 10px !important;
+                width: 100% !important;
+            }
+            
+            /* Tabel tidak terpotong */
+            .report-table {
+                overflow-x: visible !important;
+                width: 100% !important;
+            }
+            
+            table {
+                width: 100% !important;
+                table-layout: auto !important;
+            }
+            
+            th, td {
+                white-space: normal !important;
+                word-break: break-word !important;
+                font-size: 10px !important;
+                padding: 6px 8px !important;
+            }
+            
+            /* Tampilkan header/footer print */
             .print-header {
                 display: block !important;
                 text-align: center;
-                margin-bottom: 30px;
-                padding-bottom: 15px;
-                border-bottom: 3px solid #064e3b;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #064e3b;
             }
             
             .print-header h1 {
                 color: #064e3b;
-                font-size: 24px;
-                margin-bottom: 8px;
+                font-size: 20px;
             }
             
             .print-header .subtitle {
+                font-size: 11px;
                 color: #64748b;
-                font-size: 12px;
             }
             
             .print-header .period {
-                background: #f1f5f9;
-                padding: 5px 12px;
-                border-radius: 20px;
-                font-size: 11px;
-                display: inline-block;
-                margin-top: 10px;
-            }
-            
-            .print-header .date-printed {
                 font-size: 10px;
-                color: #94a3b8;
-                margin-top: 8px;
+                background: #f1f5f9;
+                padding: 3px 10px;
+                border-radius: 15px;
+                display: inline-block;
+                margin-top: 5px;
             }
             
-            /* Tampilkan footer print */
             .print-footer {
                 display: block !important;
                 position: fixed;
@@ -370,9 +447,9 @@ $periode_text = match($periode) {
                 left: 0;
                 right: 0;
                 text-align: center;
-                font-size: 10px;
+                font-size: 9px;
                 color: #94a3b8;
-                padding: 15px;
+                padding: 10px;
                 border-top: 1px solid #e2e8f0;
                 background: white;
             }
@@ -385,212 +462,172 @@ $periode_text = match($periode) {
                 page-break-inside: avoid;
             }
             
-            /* Atur margin halaman */
             @page {
                 size: A4;
-                margin: 1.5cm;
+                margin: 1cm;
             }
             
-            /* Ukuran font lebih kecil agar muat */
             .summary-value {
-                font-size: 20px !important;
+                font-size: 16px !important;
             }
             
-            table {
-                font-size: 10px !important;
-            }
-            
-            th, td {
-                padding: 8px 10px !important;
+            .summary-card, .report-table, .recommendation-section {
+                border: 1px solid #ccc !important;
             }
             
             .header {
                 display: none !important;
-            }
-            
-            /* Warna tetap saat print */
-            .summary-card, .report-table, .recommendation-section {
-                border: 1px solid #ccc !important;
-            }
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .stats-summary {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .main-content {
-                padding: 20px;
-            }
-            
-            .filter-form {
-                flex-direction: column;
-            }
-            
-            .sidebar-wrapper {
-                display: none;
-            }
-            
-            .main-content {
-                margin-left: 0 !important;
             }
         }
     </style>
 </head>
 <body>
 
-<div class="main-wrapper">
-    <!-- SIDEBAR - akan disembunyikan saat print -->
-    <div class="sidebar-wrapper">
-        <?php include 'includes/sidebar.php'; ?>
+<!-- KONTEN UTAMA -->
+<div class="main-content">
+    
+    <!-- HEADER PRINT -->
+    <div class="print-header">
+        <h1>🌱 SMART SAWI</h1>
+        <div class="subtitle">Sistem Monitoring Tanaman Otomatis</div>
+        <div class="period">Laporan Periode: <?= $periode_text ?></div>
+        <div class="date-printed">Dicetak: <?= date('d/m/Y H:i:s') ?></div>
     </div>
     
-    <!-- KONTEN UTAMA -->
-    <div class="main-content">
-        
-        <!-- HEADER KHUSUS PRINT PDF -->
-        <div class="print-header">
-            <h1>🌱 SMART SAWI</h1>
-            <div class="subtitle">Sistem Monitoring Tanaman Otomatis</div>
-            <div class="period">Laporan Periode: <?= $periode_text ?></div>
-            <div class="date-printed">Dicetak: <?= date('d/m/Y H:i:s') ?></div>
-        </div>
-        
-        <!-- HEADER WEB -->
-        <div class="header">
-            <h1>📄 Laporan Monitoring Tanaman</h1>
+    <!-- HEADER WEB -->
+    <div class="header">
+        <h1>📄 Laporan Monitoring Tanaman</h1>
+        <div class="btn-group">
             <button class="btn btn-print no-print" onclick="window.print()">🖨️ Cetak PDF</button>
+            <a href="?export_excel=1<?= $periode == 'custom' ? '&periode=custom&tgl_awal=' . $tgl_awal . '&tgl_akhir=' . $tgl_akhir : '&periode=' . $periode ?>" class="btn btn-excel no-print">📊 Export Excel</a>
         </div>
-        
-        <!-- FILTER (tidak ikut cetak) -->
-        <div class="filter-box no-print">
-            <form method="GET" class="filter-form">
-                <div class="filter-group">
-                    <label>Periode Cepat</label>
-                    <select name="periode" onchange="this.form.submit()">
-                        <option value="hari" <?= $periode == 'hari' ? 'selected' : '' ?>>Hari Ini</option>
-                        <option value="minggu" <?= $periode == 'minggu' ? 'selected' : '' ?>>7 Hari Terakhir</option>
-                        <option value="bulan" <?= $periode == 'bulan' ? 'selected' : '' ?>>30 Hari Terakhir</option>
-                        <option value="custom" <?= $periode == 'custom' ? 'selected' : '' ?>>Kustom</option>
-                    </select>
-                </div>
-                <?php if($periode == 'custom'): ?>
-                <div class="filter-group">
-                    <label>Tanggal Awal</label>
-                    <input type="date" name="tgl_awal" value="<?= $tgl_awal ?>">
-                </div>
-                <div class="filter-group">
-                    <label>Tanggal Akhir</label>
-                    <input type="date" name="tgl_akhir" value="<?= $tgl_akhir ?>">
-                </div>
-                <div class="filter-group">
-                    <label>&nbsp;</label>
-                    <button type="submit" class="btn">Filter</button>
-                </div>
-                <?php endif; ?>
-            </form>
-        </div>
-        
-        <!-- STATISTIK SUMMARY -->
-        <div class="stats-summary">
-            <div class="summary-card">
-                <h3>🌱 Rata-rata Kelembaban Tanah</h3>
-                <div class="summary-value"><?= round($stats['avg_tanah'] ?? 0) ?>%</div>
-                <div class="summary-sub">Min: <?= round($stats['min_tanah'] ?? 0) ?>% | Max: <?= round($stats['max_tanah'] ?? 0) ?>%</div>
-            </div>
-            <div class="summary-card">
-                <h3>💧 Rata-rata Kelembaban Udara</h3>
-                <div class="summary-value"><?= round($stats['avg_udara'] ?? 0) ?>%</div>
-            </div>
-            <div class="summary-card">
-                <h3>🌡️ Rata-rata Suhu</h3>
-                <div class="summary-value"><?= round($stats['avg_suhu'] ?? 0) ?>°C</div>
-                <div class="summary-sub">Min: <?= round($stats['min_suhu'] ?? 0) ?>°C | Max: <?= round($stats['max_suhu'] ?? 0) ?>°C</div>
-            </div>
-            <div class="summary-card">
-                <h3>📊 Total Data Terekam</h3>
-                <div class="summary-value"><?= $stats['total_data'] ?? 0 ?></div>
-                <div class="summary-sub">point data</div>
-            </div>
-        </div>
-        
-        <!-- TABEL DATA -->
-        <div class="report-table">
-            <div class="report-header">
-                <h3>📊 Data Detail Periode Laporan</h3>
-                <span class="no-print" style="font-size: 12px; color: #64748b;">Total: <?= $stats['total_data'] ?? 0 ?> record</span>
-            </div>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Waktu</th>
-                            <th>Tanah (%)</th>
-                            <th>Udara (%)</th>
-                            <th>Suhu (°C)</th>
-                            <th>Cahaya (%)</th>
-                            <th>Koordinat</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if($result_laporan && $result_laporan->num_rows > 0): ?>
-                            <?php $no = 1; ?>
-                            <?php while($row = $result_laporan->fetch_assoc()): ?>
-                            <tr>
-                                <td><?= $no++ ?></td>
-                                <td><?= date('d/m/Y H:i:s', strtotime($row['reading_time'])) ?></td>
-                                <td>
-                                    <?= $row['kelTanah'] ?>
-                                    <?php if($row['kelTanah'] < 50): ?> 🔴
-                                    <?php elseif($row['kelTanah'] < 60): ?> 🟡
-                                    <?php else: ?> 🟢
-                                    <?php endif; ?>
-                                 </td>
-                                <td><?= $row['kelUdara'] ?></td>
-                                <td><?= $row['suhuUdara'] ?>°C</td>
-                                <td><?= number_format($row['kecerahan'], 0, ',', '.') ?>%</td>
-                                <td style="font-size: 11px;"><?= $row['latitude'] ?>, <?= $row['longitude'] ?></td>
-                            </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="7" style="text-align: center;">Tidak ada data dalam periode ini</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- REKOMENDASI -->
-        <?php if(!empty($rekomendasi)): ?>
-        <div class="recommendation-section">
-            <h3>💡 Rekomendasi Berdasarkan Laporan</h3>
-            <ul>
-                <?php foreach($rekomendasi as $r): ?>
-                    <li><?= $r ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-        <?php endif; ?>
-        
-        <!-- INFO FOOTER (hanya web) -->
-        <div class="info-footer no-print">
-            📌 Sistem Monitoring Tanaman Sawi Otomatis | Data dikirim dari ESP32 setiap 10 detik
-        </div>
-        
-        <!-- FOOTER KHUSUS PRINT PDF -->
-        <div class="print-footer">
-            Smart Sawi - Sistem Monitoring Tanaman Otomatis | Laporan dicetak: <?= date('d/m/Y H:i:s') ?>
-        </div>
-        
     </div>
+    
+    <!-- FILTER -->
+    <div class="filter-box no-print">
+        <form method="GET" class="filter-form">
+            <div class="filter-group">
+                <label>Periode Cepat</label>
+                <select name="periode" onchange="this.form.submit()">
+                    <option value="hari" <?= $periode == 'hari' ? 'selected' : '' ?>>Hari Ini</option>
+                    <option value="minggu" <?= $periode == 'minggu' ? 'selected' : '' ?>>7 Hari Terakhir</option>
+                    <option value="bulan" <?= $periode == 'bulan' ? 'selected' : '' ?>>30 Hari Terakhir</option>
+                    <option value="custom" <?= $periode == 'custom' ? 'selected' : '' ?>>Kustom</option>
+                </select>
+            </div>
+            <?php if($periode == 'custom'): ?>
+            <div class="filter-group">
+                <label>Tanggal Awal</label>
+                <input type="date" name="tgl_awal" value="<?= $tgl_awal ?>">
+            </div>
+            <div class="filter-group">
+                <label>Tanggal Akhir</label>
+                <input type="date" name="tgl_akhir" value="<?= $tgl_akhir ?>">
+            </div>
+            <div class="filter-group">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn">Filter</button>
+            </div>
+            <?php endif; ?>
+        </form>
+    </div>
+    
+    <!-- STATISTIK -->
+    <div class="stats-summary">
+        <div class="summary-card">
+            <h3>🌱 Rata-rata Kelembaban Tanah</h3>
+            <div class="summary-value"><?= round($stats['avg_tanah'] ?? 0) ?>%</div>
+            <div class="summary-sub">Min: <?= round($stats['min_tanah'] ?? 0) ?>% | Max: <?= round($stats['max_tanah'] ?? 0) ?>%</div>
+        </div>
+        <div class="summary-card">
+            <h3>💧 Rata-rata Kelembaban Udara</h3>
+            <div class="summary-value"><?= round($stats['avg_udara'] ?? 0) ?>%</div>
+        </div>
+        <div class="summary-card">
+            <h3>🌡️ Rata-rata Suhu</h3>
+            <div class="summary-value"><?= round($stats['avg_suhu'] ?? 0) ?>°C</div>
+            <div class="summary-sub">Min: <?= round($stats['min_suhu'] ?? 0) ?>°C | Max: <?= round($stats['max_suhu'] ?? 0) ?>°C</div>
+        </div>
+        <div class="summary-card">
+            <h3>📊 Total Data Terekam</h3>
+            <div class="summary-value"><?= $stats['total_data'] ?? 0 ?></div>
+            <div class="summary-sub">point data</div>
+        </div>
+    </div>
+    
+    <!-- TABEL -->
+    <div class="report-table">
+        <div class="report-header">
+            <h3>📊 Data Detail Periode Laporan</h3>
+            <span class="no-print" style="font-size: 12px; color: #64748b;">Total: <?= $stats['total_data'] ?? 0 ?> record</span>
+        </div>
+        <div style="overflow-x: auto;">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Waktu</th>
+                        <th>Tanah (%)</th>
+                        <th>Udara (%)</th>
+                        <th>Suhu (°C)</th>
+                        <th>Cahaya (%)</th>
+                        <th>Koordinat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if($result_laporan && $result_laporan->num_rows > 0): ?>
+                        <?php $no = 1; ?>
+                        <?php while($row = $result_laporan->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= $no++ ?></td>
+                            <td><?= date('d/m/Y H:i:s', strtotime($row['reading_time'])) ?></td>
+                            <td class="badge-tanah">
+                                <?= $row['kelTanah'] ?>
+                                <?php if($row['kelTanah'] < 50): ?> 🔴
+                                <?php elseif($row['kelTanah'] < 60): ?> 🟡
+                                <?php else: ?> 🟢
+                                <?php endif; ?>
+                            </td>
+                            <td><?= $row['kelUdara'] ?></td>
+                            <td><?= $row['suhuUdara'] ?>°C</td>
+                            <td><?= number_format($row['kecerahan'], 0, ',', '.') ?>%</td>
+                            <td style="font-size: 11px; font-family: monospace;"><?= $row['latitude'] ?>, <?= $row['longitude'] ?></td>
+                        </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" style="text-align: center;">Tidak ada data dalam periode ini</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- REKOMENDASI -->
+    <?php if(!empty($rekomendasi)): ?>
+    <div class="recommendation-section">
+        <h3>💡 Rekomendasi Berdasarkan Laporan</h3>
+        <ul>
+            <?php foreach($rekomendasi as $r): ?>
+                <li><?= $r ?></li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+    <?php endif; ?>
+    
+    <!-- FOOTER -->
+    <div class="info-footer no-print">
+        📌 Sistem Monitoring Tanaman Sawi Otomatis | Data dikirim dari ESP32 setiap 10 detik
+    </div>
+    
+    <div class="print-footer">
+        Smart Sawi - Sistem Monitoring Tanaman Otomatis | Laporan dicetak: <?= date('d/m/Y H:i:s') ?>
+    </div>
+    
 </div>
 
 <script>
-// Fungsi untuk refresh halaman saat filter berubah
 document.querySelectorAll('select[name="periode"]').forEach(select => {
     select.addEventListener('change', function() {
         this.form.submit();
